@@ -1,4 +1,4 @@
-1. Run the project using below command
+1. Run the project using below command \n
 docker-compose up -d
 
 2. Verify installation
