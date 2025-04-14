@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-box { margin-bottom: 20px; }
+        .book { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+        .book h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>Book Search</h1>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search books...">
+        <button onclick="searchBooks()">Search</button>
+    </div>
+    <div id="results"></div>
+
+    <script>
+        async function searchBooks() {
+            const query = document.getElementById('searchInput').value;
+            const response = await fetch('http://localhost:9200/books/_search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('admin:admin')
+                },
+                body: JSON.stringify({
+                    query: {
+                        multi_match: {
+                            query: query,
+                            fields: ["title", "author", "description"]
+                        }
+                    }
+                })
+            });
+            
+            const data = await response.json();
+            displayResults(data.hits.hits);
+        }
+
+        function displayResults(books) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            if (books.length === 0) {
+                resultsDiv.innerHTML = '<p>No books found.</p>';
+                return;
+            }
+            
+            books.forEach(book => {
+                const bookDiv = document.createElement('div');
+                bookDiv.className = 'book';
+                bookDiv.innerHTML = `
+                    <h3>${book._source.title}</h3>
+                    <p><strong>Author:</strong> ${book._source.author}</p>
+                    <p><strong>Published:</strong> ${book._source.published_date}</p>
+                    <p>${book._source.description}</p>
+                    <p><strong>Rating:</strong> ${book._source.rating}/5.0</p>
+                `;
+                resultsDiv.appendChild(bookDiv);
+            });
+        }
+    </script>
+</body>
+</html>
